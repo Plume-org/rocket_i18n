@@ -17,11 +17,25 @@ use tera::{Tera, Error as TeraError};
 
 const ACCEPT_LANG: &'static str = "Accept-Language";
 
+/// This is the main struct of this crate. You can register it on your Rocket instance as a
+/// fairing.
+/// 
+/// ```rust
+/// rocket::ignite()
+///     .attach(I18n::new("app"))
+/// ```
+/// 
+/// The parameter you give to [`I18n::new`] is the gettext domain to use. It doesn't really matter what you choose,
+/// but it is usually the name of your app.
+/// 
+/// Once this fairing is registered, it will update your .po files from the POT, compile them into .mo files, and select
+/// the requested locale for each request using the `Accept-Language` HTTP header.
 pub struct I18n {
     domain: &'static str
 }
 
 impl I18n {
+    /// Creates a new I18n fairing for the given domain
     pub fn new(domain: &'static str) -> I18n {
         I18n {
             domain: domain
@@ -130,6 +144,17 @@ fn tera_ngettext(msg: serde_json::Value, ctx: HashMap<String, serde_json::Value>
     Ok(serde_json::Value::String(Tera::one_off(trans.as_ref(), &ctx, false).unwrap_or(String::from(""))))
 }
 
+/// Register translation filters on your Tera instance
+/// 
+/// ```rust
+/// rocket::ignite()
+///     .attach(rocket_contrib::Template::custom(|engines| {
+///         rocket_i18n::tera(&mut engines.tera);
+///     }))
+/// ```
+/// 
+/// The two registered filters are `_` and `_n`. For example use, see the crate documentation,
+/// or the project's README.
 pub fn tera(t: &mut Tera) {
     t.register_filter("_", tera_gettext);
     t.register_filter("_n", tera_ngettext);
