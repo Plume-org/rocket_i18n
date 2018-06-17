@@ -164,7 +164,13 @@ impl Fairing for I18n {
             .headers()
             .get_one(ACCEPT_LANG)
             .unwrap_or("en")
+            // Get the first requested locale
+            // TODO: try the other ones if this one is not available
             .split(",")
+            .nth(0)
+            .unwrap_or("en")
+            // Get the locale, not the country code
+            .split("-")
             .nth(0)
             .unwrap_or("en");
         
