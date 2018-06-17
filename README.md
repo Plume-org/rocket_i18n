@@ -38,8 +38,6 @@ fn main() {
 }
 ```
 
-## For the developers
-
 ### Using Tera filters
 
 If you called `rocket_i18n::tera`, you'll be able to use two Tera filters to translate your interface.
