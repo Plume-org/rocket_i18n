@@ -12,11 +12,12 @@
 //! 
 //! ## Usage
 //! 
-//! First add it to your `Cargo.toml`:
+//! First add it to your `Cargo.toml` (you have to use the git version, because we can't publish the latest version on [https://crates.io](crates.io) as it depends on the `master` branch of Rocket):
 //! 
 //! ```toml
-//! [dependencies]
-//! rocket_i18n = "0.1"
+//! [dependencies.rocket_i18n]
+//! git = "https://github.com/BaptisteGelez/rocket_i18n"
+//! rev = "457b88c59ec31905a9193df43df58bee55b4b83d"
 //! ```
 //! 
 //! Then, in your `main.rs`:
