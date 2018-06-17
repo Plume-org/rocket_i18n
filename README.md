@@ -61,7 +61,7 @@ The second one, `_n`, is equivalent to `ngettext`. It takes the plural form as i
 <p>{{ "{{ count }} new messages" | _n(singular="One new message", count=messages.unread_count) }}</p>
 ```
 
-## In Rust code
+### In Rust code
 
 You can also use all the gettext functions in your Rust code.
 
@@ -79,7 +79,7 @@ fn hello(name: String) -> String {
 }
 ```
 
-## Editing the POT
+### Editing the POT
 
 For those strings to be translatable you should also add them to the `po/YOUR_DOMAIN.pot` file. To add a simple message, just do:
 
