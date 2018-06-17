@@ -5,7 +5,7 @@ license = "GPL-3.0"
 name = "rocket_i18n"
 readme = "README.md"
 repository = "https://github.com/BaptisteGelez/rocket_i18n"
-keywords = ["i18n", "rocket", "fairing", "gettext", "translations", "internationalization", "localization", "l10n"]
+keywords = ["i18n", "rocket", "gettext", "internationalization", "localization"]
 categories = ["internationalization", "localization", "web-programming"]
 version = "0.1.0"
 [dependencies]
