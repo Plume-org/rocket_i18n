@@ -15,4 +15,4 @@ tera = "0.11"
 
 [dependencies.rocket]
 git = "https://github.com/SergioBenitez/Rocket"
-rev = "df7111143e466c18d1f56377a8d9530a5a306aba"
+rev = "a383d49ab0c224394353bae76a2b231287483cfe"
