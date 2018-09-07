@@ -8,6 +8,7 @@ repository = "https://github.com/BaptisteGelez/rocket_i18n"
 keywords = ["i18n", "rocket", "gettext", "internationalization", "localization"]
 categories = ["internationalization", "localization", "web-programming"]
 version = "0.1.1"
+
 [dependencies]
 gettext-rs = "0.4"
 serde_json = "1.0"
@@ -15,4 +16,4 @@ tera = "0.11"
 
 [dependencies.rocket]
 git = "https://github.com/SergioBenitez/Rocket"
-rev = "a383d49ab0c224394353bae76a2b231287483cfe"
+rev = "55459db7732b9a240826a5c120c650f87e3372ce"
