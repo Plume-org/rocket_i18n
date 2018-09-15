@@ -1,4 +1,4 @@
-# Rocket I18N
+# Rocket I18N [![Build Status](https://travis-ci.org/BaptisteGelez/rocket_i18n.svg?branch=master)](https://travis-ci.org/BaptisteGelez/rocket_i18n)
 
 A crate to help you internationalize your Rocket applications.
 
