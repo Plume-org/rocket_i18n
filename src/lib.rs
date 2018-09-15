@@ -22,7 +22,10 @@
 //! 
 //! Then, in your `main.rs`:
 //! 
-//! ```rust
+//! ```rust,no_run
+//! # //can't be run because 'po/LINGUAS' don't exist
+//! # extern crate rocket;
+//! # extern crate rocket_contrib;
 //! extern crate rocket_i18n;
 //! 
 //! // ...
@@ -34,7 +37,7 @@
 //!         // Eventually register the Tera filters (only works with the master branch of Rocket)
 //!         .attach(rocket_contrib::Template::custom(|engines| {
 //!             rocket_i18n::tera(&mut engines.tera);
-//!         }))
+//!         }));
 //!         // Register routes, etc
 //! }
 //! ```
@@ -65,16 +68,12 @@
 //! You can also use all the gettext functions in your Rust code.
 //! 
 //! ```rust
-//! use rocket_i18n;
+//! # #![feature(custom_attribute)]
+//! use rocket_i18n::gettext;
 //! 
 //! #[get("/")]
 //! fn index() -> String {
 //!     gettext("Hello, world!")
-//! }
-//! 
-//! #[get("/<name>")]
-//! fn hello(name: String) -> String {
-//!     format!(gettext("Hello, {}!"), name)
 //! }
 //! ```
 //! 
@@ -102,7 +101,7 @@ extern crate rocket;
 extern crate serde_json;
 extern crate tera;
 
-use gettextrs::*;
+pub use gettextrs::*;
 use rocket::{Data, Request, Rocket, fairing::{Fairing, Info, Kind}};
 use std::{
     collections::HashMap,
@@ -119,9 +118,12 @@ const ACCEPT_LANG: &'static str = "Accept-Language";
 /// This is the main struct of this crate. You can register it on your Rocket instance as a
 /// fairing.
 /// 
-/// ```rust
+/// ```rust,no_run
+/// # //can't be run because 'po/LINGUAS' don't exist
+/// # extern crate rocket;
+/// # extern crate rocket_i18n;
 /// rocket::ignite()
-///     .attach(I18n::new("app"))
+///     .attach(rocket_i18n::I18n::new("app"));
 /// ```
 /// 
 /// The parameter you give to [`I18n::new`] is the gettext domain to use. It doesn't really matter what you choose,
@@ -252,10 +254,13 @@ fn tera_ngettext(msg: serde_json::Value, ctx: HashMap<String, serde_json::Value>
 /// Register translation filters on your Tera instance
 /// 
 /// ```rust
+/// # extern crate rocket;
+/// # extern crate rocket_contrib;
+/// # extern crate rocket_i18n;
 /// rocket::ignite()
 ///     .attach(rocket_contrib::Template::custom(|engines| {
 ///         rocket_i18n::tera(&mut engines.tera);
-///     }))
+///     }));
 /// ```
 /// 
 /// The two registered filters are `_` and `_n`. For example use, see the crate documentation,
