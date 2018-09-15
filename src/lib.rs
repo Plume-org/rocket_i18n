@@ -164,14 +164,14 @@ impl Fairing for I18n {
             .headers()
             .get_one(ACCEPT_LANG)
             .unwrap_or("en")
-            // Get the first requested locale
-            // TODO: try the other ones if this one is not available
             .split(",")
-            .nth(0)
-            .unwrap_or("en")
-            // Get the locale, not the country code
-            .split("-")
-            .nth(0)
+            .filter_map(|lang| lang
+                // Get the locale, not the country code
+                .split(|c| c=='-'||c==';')
+                .nth(0)
+                )
+            // Get the first requested locale we support
+            .find(|lang|  get_locales().contains(&lang.to_string()))
             .unwrap_or("en");
         
         // We can't use setlocale(LocaleCategory::LcAll, lang), because it only accepts system-wide installed
