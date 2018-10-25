@@ -1,191 +1,154 @@
 //! # Rocket I18N
-//! 
+//!
 //! A crate to help you internationalize your Rocket applications.
-//! 
+//!
 //! ## Features
-//! 
-//! - Create `.po` files for locales listed in `po/LINGUAS`, from a POT file
-//! - Update `.po` files from the POT file if needed
-//! - Compile `.po` files into `.mo` ones
+//!
+//! - Build helpers (with the `build` feature enabled), to update and compile PO files.
 //! - Select the correct locale for each request
-//! - Integrates with Tera templates
-//! 
+//! - Provides a macro to internationalize any string.
+//!
 //! ## Usage
-//! 
+//!
 //! First add it to your `Cargo.toml` (you have to use the git version, because we can't publish the latest version on [https://crates.io](crates.io) as it depends on the `master` branch of Rocket):
-//! 
+//!
 //! ```toml
 //! [dependencies.rocket_i18n]
 //! git = "https://github.com/BaptisteGelez/rocket_i18n"
-//! rev = "457b88c59ec31905a9193df43df58bee55b4b83d"
+//! rev = "<LATEST COMMIT>"
 //! ```
-//! 
+//!
 //! Then, in your `main.rs`:
-//! 
-//! ```rust,no_run
-//! # //can't be run because 'po/LINGUAS' don't exist
-//! # extern crate rocket;
-//! # extern crate rocket_contrib;
+//!
+//! ```rust,ignore
+//! extern crate rocket;
+//! #[macro_use]
 //! extern crate rocket_i18n;
-//! 
-//! // ...
-//! 
+//!
 //! fn main() {
 //!     rocket::ignite()
-//!         // Register the fairing. The parameter is the domain you want to use (the name of your app most of the time)
-//!         .attach(rocket_i18n::I18n::new("my_app"))
-//!         // Eventually register the Tera filters (only works with the master branch of Rocket)
-//!         .attach(rocket_contrib::Template::custom(|engines| {
-//!             rocket_i18n::tera(&mut engines.tera);
-//!         }));
+//!         // Make Rocket manage your translations.
+//!         .manage(rocket_i18n::i18n(vec![ "en", "fr", "de", "ja" ]));
 //!         // Register routes, etc
 //! }
 //! ```
-//! 
-//! ### Using Tera filters
-//! 
-//! If you called `rocket_i18n::tera`, you'll be able to use two Tera filters to translate your interface.
-//! 
-//! The first one, `_`, corresponds to the `gettext` function of gettext. It takes a string as input and translate it. Any argument given to the filter can
-//! be used in the translated string using the Tera syntax.
-//! 
-//! ```jinja
-//! <p>{{ "Hello, world" | _ }}</p>
-//! <p>{{ "Your name is {{ name }}" | _(name=user.name) }}
-//! ```
-//! 
-//! The second one, `_n`, is equivalent to `ngettext`. It takes the plural form as input, and two required arguments in addition to those you may want to use for interpolation:
-//! 
-//! - `singular`, the singular form of this string
-//! - `count`, the number of items, to determine how the string should be pluralized
-//! 
-//! ```jinja
-//! <p>{{ "{{ count }} new messages" | _n(singular="One new message", count=messages.unread_count) }}</p>
-//! ```
-//! 
-//! ### In Rust code
-//! 
-//! You can also use all the gettext functions in your Rust code.
-//! 
-//! ```rust
-//! # #![feature(custom_attribute)]
-//! use rocket_i18n::gettext;
-//! 
+//!
+//! Then in all your requests you'll be able to use the `i18n` macro to translate anything.
+//! It takes a `gettext::Catalog` and a string to translate as argument.
+//!
+//! ```rust,ignore
+//! # #[macro_use] extern crate rocket_i18n;
+//!
+//! use rocket_i18n::I18n;
+//!
 //! #[get("/")]
-//! fn index() -> String {
-//!     gettext("Hello, world!")
+//! fn route(i18n: I18n) -> &str {
+//!     i18n!(i18n.catalog, "Hello, world!")
 //! }
 //! ```
-//! 
+//!
+//! For strings that may have a plural form, just add the plural and the number of element to the
+//! arguments
+//!
+//! ```rust,ignore
+//! i18n!(i18n.catalog, "One new message", "{0} new messages", 42);
+//! ```
+//!
+//! Any extra argument, after a `;`, will be used for formatting.
+//!
+//! ```rust,ignore
+//! let user_name = "Alex";
+//! i18n!(i18n.catalog, "Hello {0}!"; user_name);
+//! ```
+//!
+//! When using it with plural, `{0}` will be the number of elements, and other arguments will start
+//! at `{1}`.
+//!
+//! Because of its design, rocket_i18n is only compatible with askama. You can use
+//! the `t` macro in your templates, as long as they have a field called `catalog` to
+//! store your catalog.
+//!
 //! ### Editing the POT
-//! 
+//!
 //! For those strings to be translatable you should also add them to the `po/YOUR_DOMAIN.pot` file. To add a simple message, just do:
-//! 
+//!
 //! ```po
 //! msgid "Hello, world" # The string you used with your filter
 //! msgstr "" # Always empty
 //! ```
-//! 
+//!
 //! For plural forms, the syntax is a bit different:
-//! 
+//!
 //! ```po
 //! msgid "You have one new notification" # The singular form
 //! msgid_plural "You have {{ count }} new notifications" # The plural one
 //! msgstr[0] ""
 //! msgstr[1] ""
 //! ```
-//! 
+//!
 
-extern crate gettextrs;
+extern crate gettext;
 extern crate rocket;
-extern crate serde_json;
-extern crate tera;
 
-pub use gettextrs::*;
-use rocket::{Data, Request, Rocket, fairing::{Fairing, Info, Kind}};
-use std::{
-    collections::HashMap,
-    env,
-    fs,
-    io::{BufRead, BufReader},
-    path::{Path, PathBuf},
-    process::Command
+pub use gettext::*;
+use rocket::{
+    http::Status,
+    request::{self, FromRequest},
+    Outcome, Request, State,
 };
-use tera::{Tera, Error as TeraError};
+use std::fs;
 
 const ACCEPT_LANG: &'static str = "Accept-Language";
 
-/// This is the main struct of this crate. You can register it on your Rocket instance as a
-/// fairing.
-/// 
-/// ```rust,no_run
-/// # //can't be run because 'po/LINGUAS' don't exist
-/// # extern crate rocket;
-/// # extern crate rocket_i18n;
-/// rocket::ignite()
-///     .attach(rocket_i18n::I18n::new("app"));
-/// ```
-/// 
-/// The parameter you give to [`I18n::new`] is the gettext domain to use. It doesn't really matter what you choose,
-/// but it is usually the name of your app.
-/// 
-/// Once this fairing is registered, it will update your .po files from the POT, compile them into .mo files, and select
-/// the requested locale for each request using the `Accept-Language` HTTP header.
-pub struct I18n {
-    domain: &'static str
+/// A request guard to get the right translation catalog for the current request
+pub struct I18n<'a> {
+    pub catalog: Catalog<'a>,
 }
 
-impl I18n {
-    /// Creates a new I18n fairing for the given domain
-    pub fn new(domain: &'static str) -> I18n {
-        I18n {
-            domain: domain
-        }
-    }
+type Translations<'a> = Vec<(&'static str, Catalog<'a>)>;
+
+pub fn i18n(lang: Vec<&'static str>) -> Translations {
+    lang.iter().fold(Vec::new(), |mut trans, l| {
+        let mo_file =
+            fs::File::open(format!("translations/{}.mo", l)).expect("Couldn't open catalog");
+        let cat = Catalog::parse(mo_file).expect("Error while loading catalog");
+        trans.push((l, cat));
+        trans
+    })
 }
 
-impl Fairing for I18n {
-    fn info(&self) -> Info {
-        Info {
-            name: "Gettext I18n",
-            kind: Kind::Attach | Kind::Request
-        }
-    }
+impl<'a, 'r> FromRequest<'a, 'r> for I18n<'r> {
+    type Error = ();
 
-    fn on_attach(&self, rocket: Rocket) -> Result<Rocket, Rocket> {
-        update_po(self.domain);
-        compile_po(self.domain);
+    fn from_request(req: &'a Request<'r>) -> request::Outcome<I18n<'r>, ()> {
+        let langs = &*req
+            .guard::<State<Translations>>()
+            .expect("Couldn't retrieve translations because they are not managed by Rocket.");
 
-        bindtextdomain(self.domain, fs::canonicalize(&PathBuf::from("./translations/")).unwrap().to_str().unwrap());
-        textdomain(self.domain);
-        Ok(rocket)
-    }
-
-    fn on_request(&self, request: &mut Request, _: &Data) {
-        let lang = request
+        let lang = req
             .headers()
             .get_one(ACCEPT_LANG)
             .unwrap_or("en")
             .split(",")
             .filter_map(|lang| lang
                 // Get the locale, not the country code
-                .split(|c| c=='-'||c==';')
-                .nth(0)
-                )
+                .split(|c| c == '-' || c == ';')
+                .nth(0))
             // Get the first requested locale we support
-            .find(|lang|  get_locales().contains(&lang.to_string()))
+            .find(|lang| langs.iter().any(|l| l.0 == &lang.to_string()))
             .unwrap_or("en");
-        
-        // We can't use setlocale(LocaleCategory::LcAll, lang), because it only accepts system-wide installed
-        // locales (and most of the time there are only a few of them).
-        // But, when we set the LANGUAGE environment variable, and an empty string as a second parameter to
-        // setlocale, gettext will be smart enough to find a matching locale in the locally installed ones.
-        env::set_var("LANGUAGE", lang);
-        setlocale(LocaleCategory::LcAll, "");
+
+        match langs.iter().find(|l| l.0 == lang) {
+            Some(catalog) => Outcome::Success(I18n {
+                catalog: catalog.1.clone(),
+            }),
+            None => Outcome::Failure((Status::InternalServerError, ())),
+        }
     }
 }
 
-fn update_po(domain: &str) {
+#[cfg(feature = "build")]
+pub fn update_po(domain: &str) {
     let pot_path = Path::new("po").join(format!("{}.pot", domain));
 
     for lang in get_locales() {
@@ -214,7 +177,9 @@ fn update_po(domain: &str) {
     }
 }
 
-fn compile_po(domain: &str) {
+/// Transforms all the .po files in the `po` directory of your project
+#[cfg(feature = "build")]
+fn compile_po() {
     for lang in get_locales() {
         let po_path = Path::new("po").join(format!("{}.po", lang.clone()));
         let mo_dir = Path::new("translations")
@@ -231,41 +196,104 @@ fn compile_po(domain: &str) {
     }
 }
 
-fn get_locales() -> Vec<String> {
-    let linguas_file = fs::File::open(Path::new("po").join("LINGUAS")).expect("Couldn't find po/LINGUAS file");
-    let linguas = BufReader::new(&linguas_file);
-    linguas.lines().map(Result::unwrap).collect()
+/// See the crate documentation for information
+/// about how to use this macro.
+#[macro_export]
+macro_rules! i18n {
+    ($cat:expr, $msg:expr) => {
+        $cat.gettext($msg)
+    };
+    ($cat:expr, $msg:expr, $plur:expr, $count:expr) => {
+        $crate::try_format(cat.ngettext($msg, $plur, $count), &[ Box::new($count) ])
+            .expect("GetText formatting error")
+    };
+
+    ($cat:expr, $msg:expr ; $( $args:expr ),*) => {
+        $crate::try_format($cat.gettext($msg), &[ $( Box::new($args) ),* ])
+            .expect("GetText formatting error")
+    };
+    ($cat:expr, $msg:expr, $plur:expr, $count:expr ; $( $args:expr ),*) => {
+        $crate::try_format($cat.ngettext($msg, $plur, $count), &[ Box::new($count), $( Box::new($args) ),* ])
+            .expect("GetText formatting error")
+    };
 }
 
-fn tera_gettext(msg: serde_json::Value, ctx: HashMap<String, serde_json::Value>) -> Result<serde_json::Value, TeraError> {
-    let trans = gettext(msg.as_str().unwrap());
-    Ok(serde_json::Value::String(Tera::one_off(trans.as_ref(), &ctx, false).unwrap_or(String::from(""))))
+/// Works the same way as `i18n`, but without needing to give a `Catalog`
+/// as first argument.
+///
+/// For use in askama templates.
+#[macro_export]
+macro_rules! t {
+    ($( $args:tt )+) => {
+        i18n!(self.catalog, $( $args )+)
+    };
 }
 
-fn tera_ngettext(msg: serde_json::Value, ctx: HashMap<String, serde_json::Value>) -> Result<serde_json::Value, TeraError> {
-    let trans = ngettext(
-        ctx.get("singular").unwrap().as_str().unwrap(),
-        msg.as_str().unwrap(),
-        ctx.get("count").unwrap().as_u64().unwrap() as u32
-    );
-    Ok(serde_json::Value::String(Tera::one_off(trans.as_ref(), &ctx, false).unwrap_or(String::from(""))))
+#[doc(hidden)]
+pub fn try_format(str_pattern: &str, argv: &[Box<std::fmt::Display>]) -> Result<String, ()> {
+    use std::fmt::Write;
+
+    //first we parse the pattern
+    let mut pattern = vec![];
+    let mut vars = vec![];
+    let mut finish_or_fail = false;
+    for (i, part) in str_pattern.split('}').enumerate() {
+        if finish_or_fail {
+            return Err(());
+        }
+        if part.contains('{') {
+            let mut part = part.split('{');
+            let text = part.next().ok_or(())?;
+            let arg = part.next().ok_or(())?;
+            if part.next() != None {
+                return Err(());
+            }
+            pattern.push(text);
+            vars.push(
+                argv.get::<usize>(if arg.len() > 0 {
+                    arg.parse().map_err(|_| ())?
+                } else {
+                    i
+                }).ok_or(())?,
+            );
+        } else {
+            finish_or_fail = true;
+            pattern.push(part);
+        }
+    }
+
+    //then we generate the result String
+    let mut res = String::with_capacity(str_pattern.len());
+    let mut pattern = pattern.iter();
+    let mut vars = vars.iter();
+    let mut finish_or_fail = false;
+    while let Some(text) = pattern.next() {
+        if finish_or_fail {
+            return Err(());
+        }
+        res.write_str(text).map_err(|_| ())?;
+        if let Some(var) = vars.next() {
+            res.write_str(&format!("{}", var)).map_err(|_| ())?;
+        } else {
+            finish_or_fail = true;
+        }
+    }
+    Ok(res)
 }
 
-/// Register translation filters on your Tera instance
-/// 
-/// ```rust
-/// # extern crate rocket;
-/// # extern crate rocket_contrib;
-/// # extern crate rocket_i18n;
-/// rocket::ignite()
-///     .attach(rocket_contrib::Template::custom(|engines| {
-///         rocket_i18n::tera(&mut engines.tera);
-///     }));
-/// ```
-/// 
-/// The two registered filters are `_` and `_n`. For example use, see the crate documentation,
-/// or the project's README.
-pub fn tera(t: &mut Tera) {
-    t.register_filter("_", tera_gettext);
-    t.register_filter("_n", tera_ngettext);
+#[cfg(test)]
+struct FakeCatalog;
+
+#[cfg(test)]
+impl FakeCatalog {
+    pub fn gettext<'a>(&self, x: &'a str) -> &'a str {
+        x
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn test_macros () {
+    let catalog = FakeCatalog;
+    assert_eq!(String::from("Hello, John"), i18n!(catalog, "Hello, {0}"; "John"));
 }
