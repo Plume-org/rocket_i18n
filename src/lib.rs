@@ -229,8 +229,15 @@ macro_rules! t {
     };
 }
 
+#[derive(Debug)]
 #[doc(hidden)]
-pub fn try_format(str_pattern: &str, argv: &[Box<std::fmt::Display>]) -> Result<String, ()> {
+pub enum FormatError {
+    UnmatchedCurlyBracket,
+    InvalidPositionalArgument,
+}
+
+#[doc(hidden)]
+pub fn try_format(str_pattern: &str, argv: &[Box<std::fmt::Display>]) -> Result<String, FormatError> {
     use std::fmt::Write;
 
     //first we parse the pattern
@@ -239,22 +246,23 @@ pub fn try_format(str_pattern: &str, argv: &[Box<std::fmt::Display>]) -> Result<
     let mut finish_or_fail = false;
     for (i, part) in str_pattern.split('}').enumerate() {
         if finish_or_fail {
-            return Err(());
+            return Err(FormatError::UnmatchedCurlyBracket);
         }
         if part.contains('{') {
             let mut part = part.split('{');
-            let text = part.next().ok_or(())?;
-            let arg = part.next().ok_or(())?;
+            let text = part.next().unwrap();
+            let arg = part.next().ok_or(FormatError::UnmatchedCurlyBracket)?;
             if part.next() != None {
-                return Err(());
+                return Err(FormatError::UnmatchedCurlyBracket);
             }
             pattern.push(text);
             vars.push(
                 argv.get::<usize>(if arg.len() > 0 {
-                    arg.parse().map_err(|_| ())?
+                    arg.parse()
+                        .map_err(|_| FormatError::InvalidPositionalArgument)?
                 } else {
                     i
-                }).ok_or(())?,
+                }).ok_or(FormatError::InvalidPositionalArgument)?,
             );
         } else {
             finish_or_fail = true;
@@ -266,16 +274,10 @@ pub fn try_format(str_pattern: &str, argv: &[Box<std::fmt::Display>]) -> Result<
     let mut res = String::with_capacity(str_pattern.len());
     let mut pattern = pattern.iter();
     let mut vars = vars.iter();
-    let mut finish_or_fail = false;
     while let Some(text) = pattern.next() {
-        if finish_or_fail {
-            return Err(());
-        }
-        res.write_str(text).map_err(|_| ())?;
+        res.write_str(text).unwrap();
         if let Some(var) = vars.next() {
-            res.write_str(&format!("{}", var)).map_err(|_| ())?;
-        } else {
-            finish_or_fail = true;
+            res.write_str(&format!("{}", var)).unwrap();
         }
     }
     Ok(res)
@@ -293,7 +295,10 @@ impl FakeCatalog {
 
 #[cfg(test)]
 #[test]
-fn test_macros () {
+fn test_macros() {
     let catalog = FakeCatalog;
-    assert_eq!(String::from("Hello, John"), i18n!(catalog, "Hello, {0}"; "John"));
+    assert_eq!(
+        String::from("Hello, John"),
+        i18n!(catalog, "Hello, {0}"; "John")
+    );
 }
