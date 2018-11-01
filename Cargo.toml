@@ -12,8 +12,8 @@ version = "0.2.0"
 [dependencies]
 serde_json = "1.0"
 tera = "0.11"
-gettext = { git = "https://github.com/BaptisteGelez/gettext", rev = "343ce3a33ae52c393cfd8f6f6403eb1dda542186" }
-rocket = { git = "https://github.com/SergioBenitez/Rocket", rev = "55459db7732b9a240826a5c120c650f87e3372ce" }
+gettext = { git = "https://github.com/justinas/gettext", rev = "e9213976f2e3d418ad367e1bf19bd98f47a42440" }
+rocket = "0.4.0-rc.1"
 
 [features]
 build = []

@@ -101,11 +101,11 @@ use std::fs;
 const ACCEPT_LANG: &'static str = "Accept-Language";
 
 /// A request guard to get the right translation catalog for the current request
-pub struct I18n<'a> {
-    pub catalog: Catalog<'a>,
+pub struct I18n {
+    pub catalog: Catalog,
 }
 
-type Translations<'a> = Vec<(&'static str, Catalog<'a>)>;
+type Translations = Vec<(&'static str, Catalog)>;
 
 pub fn i18n(lang: Vec<&'static str>) -> Translations {
     lang.iter().fold(Vec::new(), |mut trans, l| {
@@ -117,10 +117,10 @@ pub fn i18n(lang: Vec<&'static str>) -> Translations {
     })
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for I18n<'r> {
+impl<'a, 'r> FromRequest<'a, 'r> for I18n{
     type Error = ();
 
-    fn from_request(req: &'a Request<'r>) -> request::Outcome<I18n<'r>, ()> {
+    fn from_request(req: &'a Request) -> request::Outcome<I18n, ()> {
         let langs = &*req
             .guard::<State<Translations>>()
             .expect("Couldn't retrieve translations because they are not managed by Rocket.");
@@ -160,7 +160,8 @@ pub fn update_po(domain: &str) {
                 .arg("-U")
                 .arg(po_path.to_str().unwrap())
                 .arg(pot_path.to_str().unwrap())
-                .spawn()
+                .status()
+                .map(|s| if !s.success() { panic!("Couldn't update PO file") })
                 .expect("Couldn't update PO file");
         } else {
             println!("Creating {}", lang.clone());
@@ -171,7 +172,8 @@ pub fn update_po(domain: &str) {
                 .arg("-l")
                 .arg(lang)
                 .arg("--no-translator")
-                .spawn()
+                .status()
+                .map(|s| if !s.success() { panic!("Couldn't init PO file") })
                 .expect("Couldn't init PO file");
         }
     }
@@ -191,7 +193,8 @@ fn compile_po() {
         Command::new("msgfmt")
             .arg(format!("--output-file={}", mo_path.to_str().unwrap()))
             .arg(po_path)
-            .spawn()
+            .status()
+            .map(|s| if !s.success() { panic!("Couldn't compile translations") })
             .expect("Couldn't compile translations");
     }
 }
