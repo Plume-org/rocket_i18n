@@ -204,7 +204,7 @@ macro_rules! i18n {
         $cat.gettext($msg)
     };
     ($cat:expr, $msg:expr, $plur:expr, $count:expr) => {
-        $crate::try_format(cat.ngettext($msg, $plur, $count), &[ Box::new($count) ])
+        $crate::try_format($cat.ngettext($msg, $plur, $count), &[ Box::new($count) ])
             .expect("GetText formatting error")
     };
 
