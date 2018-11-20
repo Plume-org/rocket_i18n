@@ -11,7 +11,15 @@ version = "0.2.0"
 
 [dependencies]
 gettext = "0.3"
-rocket = "0.4.0-rc.1"
+
+[dependencies.rocket]
+version = "0.4.0-rc.1"
+optional = true
+
+[dependencies.actix-web]
+version = "0.7"
+optional = true
 
 [features]
+default = ["rocket"]
 build = []
