@@ -207,7 +207,7 @@ macro_rules! i18n {
         $cat.gettext($msg)
     };
     ($cat:expr, $msg:expr, $plur:expr, $count:expr) => {
-        $crate::try_format($cat.ngettext($msg, $plur, $count as u64), &[ Box::new($count) ])
+        $crate::try_format($cat.ngettext($msg, $plur, $count.clone() as u64), &[ Box::new($count) ])
             .expect("GetText formatting error")
     };
 
@@ -216,7 +216,7 @@ macro_rules! i18n {
             .expect("GetText formatting error")
     };
     ($cat:expr, $msg:expr, $plur:expr, $count:expr ; $( $args:expr ),*) => {
-        $crate::try_format($cat.ngettext($msg, $plur, $count as u64), &[ Box::new($count), $( Box::new($args) ),* ])
+        $crate::try_format($cat.ngettext($msg, $plu, $count.clone() as u64), &[ Box::new($count), $( Box::new($args) ),* ])
             .expect("GetText formatting error")
     };
 }
@@ -240,7 +240,7 @@ pub enum FormatError {
 }
 
 #[doc(hidden)]
-pub fn try_format(str_pattern: &str, argv: &[Box<std::fmt::Display>]) -> Result<String, FormatError> {
+pub fn try_format<'a>(str_pattern: &'a str, argv: &[Box<dyn std::fmt::Display + 'a>]) -> Result<String, FormatError> {
     use std::fmt::Write;
 
     //first we parse the pattern
