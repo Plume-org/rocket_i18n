@@ -112,7 +112,7 @@ pub struct I18n {
     pub catalog: Catalog,
 }
 
-type Translations = Vec<(&'static str, Catalog)>;
+pub type Translations = Vec<(&'static str, Catalog)>;
 
 pub fn i18n(lang: Vec<&'static str>) -> Translations {
     lang.iter().fold(Vec::new(), |mut trans, l| {
