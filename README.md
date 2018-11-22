@@ -28,7 +28,7 @@ extern crate rocket_i18n;
 fn main() {
     rocket::ignite()
         // Make Rocket manage your translations.
-        .manage(rocket_i18n::i18n(vec![ "en", "fr", "de", "ja" ]));
+        .manage(rocket_i18n::i18n("your-domain", vec![ "en", "fr", "de", "ja" ]));
         // Register routes, etc
 }
 ```
@@ -120,7 +120,7 @@ impl Internationalized for MyState {
 
 fn main() {
     let state = MyState {
-        translations: rocket_i18n::i18n(vec![ "en", "fr", "de", "ja" ]);
+        translations: rocket_i18n::i18n("your-domain", vec![ "en", "fr", "de", "ja" ]);
     };
 
     App::with_state(state)
