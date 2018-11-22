@@ -28,7 +28,7 @@
 //! fn main() {
 //!     rocket::ignite()
 //!         // Make Rocket manage your translations.
-//!         .manage(rocket_i18n::i18n(vec![ "en", "fr", "de", "ja" ]));
+//!         .manage(rocket_i18n::i18n("your-domain", vec![ "en", "fr", "de", "ja" ]));
 //!         // Register routes, etc
 //! }
 //! ```
@@ -114,10 +114,10 @@ pub struct I18n {
 
 pub type Translations = Vec<(&'static str, Catalog)>;
 
-pub fn i18n(lang: Vec<&'static str>) -> Translations {
+pub fn i18n(domain: &str, lang: Vec<&'static str>) -> Translations {
     lang.iter().fold(Vec::new(), |mut trans, l| {
-        let mo_file =
-            fs::File::open(format!("translations/{}.mo", l)).expect("Couldn't open catalog");
+        let mo_file = fs::File::open(format!("translations/{}/LC_MESSAGES/{}.mo", l, domain))
+            .expect("Couldn't open catalog");
         let cat = Catalog::parse(mo_file).expect("Error while loading catalog");
         trans.push((l, cat));
         trans
