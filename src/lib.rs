@@ -125,10 +125,12 @@ pub fn i18n(lang: Vec<&'static str>) -> Translations {
 }
 
 #[cfg(feature = "build")]
-pub fn update_po(domain: &str) {
+pub fn update_po(domain: &str, locales: &[String]) {
+    use std::{path::Path, process::Command};
+
     let pot_path = Path::new("po").join(format!("{}.pot", domain));
 
-    for lang in get_locales() {
+    for lang in locales {
         let po_path = Path::new("po").join(format!("{}.po", lang.clone()));
         if po_path.exists() && po_path.is_file() {
             println!("Updating {}", lang.clone());
@@ -166,8 +168,10 @@ pub fn update_po(domain: &str) {
 
 /// Transforms all the .po files in the `po` directory of your project
 #[cfg(feature = "build")]
-fn compile_po() {
-    for lang in get_locales() {
+pub fn compile_po(domain: &str, locales: &[String]) {
+    use std::{path::Path, process::Command};
+
+    for lang in locales {
         let po_path = Path::new("po").join(format!("{}.po", lang.clone()));
         let mo_dir = Path::new("translations")
             .join(lang.clone())
