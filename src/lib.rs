@@ -118,14 +118,14 @@ pub fn i18n(domain: &str, lang: Vec<&'static str>) -> Translations {
     lang.iter().fold(Vec::new(), |mut trans, l| {
         let mo_file = fs::File::open(format!("translations/{}/LC_MESSAGES/{}.mo", l, domain))
             .expect("Couldn't open catalog");
-        let cat = Catalog::parse(mo_file).expect("Error while loading catalog");
+        let cat = Catalog::parse(mo_file).expect(format!("Error while loading catalog ({})", l).as_str());
         trans.push((l, cat));
         trans
     })
 }
 
 #[cfg(feature = "build")]
-pub fn update_po(domain: &str, locales: &[String]) {
+pub fn update_po(domain: &str, locales: &[&'static str]) {
     use std::{path::Path, process::Command};
 
     let pot_path = Path::new("po").join(format!("{}.pot", domain));
@@ -168,7 +168,7 @@ pub fn update_po(domain: &str, locales: &[String]) {
 
 /// Transforms all the .po files in the `po` directory of your project
 #[cfg(feature = "build")]
-pub fn compile_po(domain: &str, locales: &[String]) {
+pub fn compile_po(domain: &str, locales: &[&'static str]) {
     use std::{path::Path, process::Command};
 
     for lang in locales {
