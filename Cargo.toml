@@ -1,13 +1,13 @@
 [package]
 authors = ["Baptiste Gelez <baptiste@gelez.xyz>"]
-description = "Rocket fairing for easy internationalization with gettext"
+description = "Rocket fairing for easy internationalization with gettext (also support Actix web)"
 license = "GPL-3.0"
 name = "rocket_i18n"
 readme = "README.md"
 repository = "https://github.com/BaptisteGelez/rocket_i18n"
 keywords = ["i18n", "rocket", "gettext", "internationalization", "localization"]
 categories = ["internationalization", "localization", "web-programming"]
-version = "0.2.0"
+version = "0.3.0"
 
 [dependencies]
 gettext = "0.3"
