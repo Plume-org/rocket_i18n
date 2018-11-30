@@ -124,6 +124,15 @@ pub fn i18n(domain: &str, lang: Vec<&'static str>) -> Translations {
     })
 }
 
+/// Use this macro to staticaly import translations into your final binary. It's use is similar to
+/// [`i18n`](../rocket_i18n/fn.i18n.html)
+/// ```rust,ignore
+/// # //ignore because there is no translation file provided with rocket_i18n
+/// # #[macro_use]
+/// # extern crate rocket_i18n;
+/// # use rocket_i18n::Translations;
+/// let tr: Translations = include_i18n!("plume", ["de", "en", "fr"]);
+/// ```
 #[macro_export]
 macro_rules! include_i18n {
     ( $domain:tt, [$($lang:tt),*] ) => {
