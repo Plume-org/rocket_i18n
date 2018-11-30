@@ -124,6 +124,27 @@ pub fn i18n(domain: &str, lang: Vec<&'static str>) -> Translations {
     })
 }
 
+#[macro_export]
+macro_rules! include_i18n {
+    ( $domain:tt, [$($lang:tt),*] ) => {
+        {
+            use $crate::Catalog;
+            vec![
+            $(
+                (
+                    $lang,
+                    Catalog::parse(
+                        &include_bytes!(
+                            concat!(env!("CARGO_MANIFEST_DIR"), "/translations/", $lang, "/LC_MESSAGES/", $domain, ".mo")
+                            )[..]
+                        ).expect("Error while loading catalog")
+                )
+            ),*
+            ]
+        }
+    }
+}
+
 #[cfg(feature = "build")]
 pub fn update_po(domain: &str, locales: &[&'static str]) {
     use std::{path::Path, process::Command};
