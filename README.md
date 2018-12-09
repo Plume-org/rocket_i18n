@@ -68,23 +68,18 @@ Because of its design, `rocket_i18n` is only compatible with askama. You can use
 the `t` macro in your templates, as long as they have a field called `catalog` to
 store your catalog.
 
-### Editing the POT
+### Generating the POT
 
-For those strings to be translatable you should also add them to the `po/YOUR_DOMAIN.pot` file. To add a simple message, just do:
+For those strings to be translatable you need to extract them in a `po/YOUR_DOMAIN.pot` file.
+You can use the [`xtr`](https://github.com/woboq/tr) tool.
 
-```po
-msgid "Hello, world" # The string you used with your filter
-msgstr "" # Always empty
+```sh
+RUSTFLAGS='--cfg procmacro2_semver_exempt' cargo install xtr
+xtr src/main.rs -o po/your-domain.pot -k i18n:2,3
 ```
 
-For plural forms, the syntax is a bit different:
-
-```po
-msgid "You have one new notification" # The singular form
-msgid_plural "You have {{ count }} new notifications" # The plural one
-msgstr[0] ""
-msgstr[1] ""
-```
+RUSTFLAGS is optional, to annotate the .pot files with line numbers.
+`-k i18n:2,3` is telling xtr to extract strings from the `i18n!` macro second and third argument.
 
 ### Using with Actix Web
 
