@@ -1,4 +1,4 @@
-# Rocket I18N [![Build Status](https://travis-ci.org/BaptisteGelez/rocket_i18n.svg?branch=master)](https://travis-ci.org/BaptisteGelez/rocket_i18n)
+# Rocket I18N [![Build Status](https://travis-ci.org/Plume-org/rocket_i18n.svg?branch=master)](https://travis-ci.org/Plume-Org/rocket_i18n)
 
 A crate to help you internationalize your Rocket applications.
 
@@ -14,7 +14,7 @@ First add it to your `Cargo.toml` (you have to use the git version, because we c
 
 ```toml
 [dependencies.rocket_i18n]
-git = "https://github.com/BaptisteGelez/rocket_i18n"
+git = "https://github.com/Plume-org/rocket_i18n"
 rev = "<LATEST COMMIT>"
 ```
 
