@@ -14,7 +14,7 @@
 //!
 //! ```toml
 //! [dependencies.rocket_i18n]
-//! git = "https://github.com/BaptisteGelez/rocket_i18n"
+//! git = "https://github.com/Plume-org/rocket_i18n"
 //! rev = "<LATEST COMMIT>"
 //! ```
 //!

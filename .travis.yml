@@ -1,4 +1,4 @@
 language: rust
 rust:
-  - nightly
+  - nightly-2018-12-06
 cache: cargo
