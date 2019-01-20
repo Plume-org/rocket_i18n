@@ -6,7 +6,7 @@ use rocket::{
     Outcome, Request, State,
 };
 
-impl<'a, 'r> FromRequest<'a, 'r> for I18n{
+impl<'a, 'r> FromRequest<'a, 'r> for I18n {
     type Error = ();
 
     fn from_request(req: &'a Request) -> request::Outcome<I18n, ()> {
