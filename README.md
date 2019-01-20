@@ -1,4 +1,4 @@
-# Rocket I18N [![Build Status](https://travis-ci.org/BaptisteGelez/rocket_i18n.svg?branch=master)](https://travis-ci.org/BaptisteGelez/rocket_i18n)
+# Rocket I18N [![Build Status](https://travis-ci.org/Plume-org/rocket_i18n.svg?branch=master)](https://travis-ci.org/Plume-Org/rocket_i18n)
 
 A crate to help you internationalize your Rocket or Actix Web applications.
 
@@ -70,6 +70,7 @@ store your catalog.
 ### Using with Actix Web
 
 First, disable the default features so it doesn't pull in all of Rocket.
+
 ```toml
 [dependencies.rocket_i18n]
 version = "0.4"
@@ -78,6 +79,7 @@ features = ["actix-web"]
 ```
 
 Then add it to your application.
+
 ```rust
 use gettext_macros::*;
 use rocket_i18n::{I18n, Internationalized, Translations};
