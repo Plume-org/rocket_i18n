@@ -28,8 +28,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for I18n {
             .unwrap_or("en");
 
         match langs.iter().find(|l| l.0 == lang) {
-            Some(catalog) => Outcome::Success(I18n {
-                catalog: catalog.1.clone(),
+            Some(translation) => Outcome::Success(I18n {
+                catalog: translation.1.clone(),
+                lang: translation.0,
             }),
             None => Outcome::Failure((Status::InternalServerError, ())),
         }

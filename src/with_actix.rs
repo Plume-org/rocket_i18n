@@ -55,8 +55,9 @@ where
             .unwrap_or("en");
 
         match langs.iter().find(|l| l.0 == lang) {
-            Some(catalog) => Ok(I18n {
-                catalog: catalog.1.clone(),
+            Some(translation) => Ok(I18n {
+                catalog: translation.1.clone(),
+                lang: translation.0,
             }),
             None => Err(MissingTranslationsError(lang.to_owned()).into()),
         }
