@@ -90,8 +90,10 @@ const ACCEPT_LANG: &'static str = "Accept-Language";
 
 /// A request guard to get the right translation catalog for the current request.
 pub struct I18n {
-	/// The catalog containing the translated messages, in the correct locale for this request.
+    /// The catalog containing the translated messages, in the correct locale for this request.
     pub catalog: Catalog,
+    /// The language of the current request.
+    pub lang: &'static str,
 }
 
 pub type Translations = Vec<(&'static str, Catalog)>;
