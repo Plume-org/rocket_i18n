@@ -10,7 +10,7 @@ categories = ["internationalization", "localization", "web-programming"]
 version = "0.4.0"
 
 [dependencies]
-gettext = "0.3"
+ gettext = { git = "https://github.com/BaptisteGelez/gettext/", rev = "294c54d74c699fbc66502b480a37cc66c1daa7f3" }
 
 [dependencies.rocket]
 version = "0.4.0"
