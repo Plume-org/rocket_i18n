@@ -2,7 +2,7 @@ use std::{error::Error, fmt};
 
 use crate::{I18n, Translations, ACCEPT_LANG};
 
-use actix_web::{FromRequest, HttpRequest, ResponseError};
+use actix_web::{dev::Payload, FromRequest, HttpRequest, ResponseError};
 
 #[derive(Debug)]
 pub struct MissingTranslationsError(String);
@@ -23,20 +23,32 @@ impl ResponseError for MissingTranslationsError {
     // this defaults to an empty InternalServerError response
 }
 
-pub trait Internationalized {
-    fn get(&self) -> Translations;
+#[derive(Debug)]
+pub struct MissingStateError;
+
+impl fmt::Display for MissingStateError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Could not retrieve state")
+    }
 }
 
-impl<S> FromRequest<S> for I18n
-where
-    S: Internationalized,
-{
-    type Config = ();
-    type Result = Result<Self, actix_web::Error>;
+impl Error for MissingStateError {
+    fn description(&self) -> &str {
+        "Could not retrieve state"
+    }
+}
 
-    fn from_request(req: &HttpRequest<S>, _: &Self::Config) -> Self::Result {
-        let state = req.state();
-        let langs = state.get();
+impl ResponseError for MissingStateError {
+    // this defaults to an empty InternalServerError response
+}
+
+impl FromRequest for I18n {
+    type Config = ();
+    type Error = actix_web::Error;
+    type Future = Result<Self, Self::Error>;
+
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        let langs = req.app_data::<Translations>().ok_or(MissingStateError)?;
 
         let lang = req
             .headers()
