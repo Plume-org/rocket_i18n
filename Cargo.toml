@@ -8,17 +8,18 @@ repository = "https://github.com/Plume-org/rocket_i18n"
 keywords = ["i18n", "rocket", "gettext", "internationalization", "localization"]
 categories = ["internationalization", "localization", "web-programming"]
 version = "0.4.0"
+edition = "2018"
 
 [dependencies]
-gettext = "0.3"
+gettext = "0.4"
 
 [dependencies.rocket]
 version = "0.4.0"
 optional = true
 
 [dependencies.actix-web]
-version = "0.7"
+version = "1.0"
 optional = true
 
 [features]
-default = ["rocket"]
+default = ["actix-web"]

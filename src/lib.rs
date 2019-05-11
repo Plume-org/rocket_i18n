@@ -1,6 +1,6 @@
 //! # Rocket I18N
 //!
-//! A crate to help you internationalize your Rocket or Actix Web applications.
+//! A crate to help you internationalize your Actix or Actix Web applications.
 //!
 //! It just selects the correct locale for each request, and return the corresponding `gettext::Catalog`.
 //!
@@ -14,33 +14,20 @@
 //! gettext-macros = "0.1" # Provides proc-macros to manage translations
 //! ```
 //!
-//! Then, in your `main.rs`:
+//! Then, in your `main.rs`, add the translations to you application's data:
 //!
 //! ```rust,ignore
-//! # use rocket;
-//! use gettext_macros::{compile_i18n, include_i18n, init_i18n};
-//!
-//! init_i18n!("my_web_app", en, eo, it, pl);
-//!
-//! fn main() {
-//!     rocket::ignite()
-//!         // Make Rocket manage your translations.
-//!         .manage(include_i18n!());
-//!         // Register routes, etc
-//! }
-//!
-//! compile_i18n!();
+//! App::new()
+//!     .data(rocket_i18n::i18n("your-domain", vec!["en", "pl"]))
+//!     .service(...)
 //! ```
+//!
 //!
 //! Then in all your requests you'll be able to use the `i18n` macro to translate anything.
 //! It takes a `gettext::Catalog` and a string to translate as argument.
 //!
 //! ```rust,ignore
-//! use gettext_macros::i18n;
-//! use rocket_i18n::I18n;
-//!
-//! #[get("/")]
-//! fn route(i18n: I18n) -> &str {
+//! fn route(i18n: I18n) -> String {
 //!     i18n!(i18n.catalog, "Hello, world!")
 //! }
 //! ```
@@ -68,23 +55,14 @@
 //! store your catalog.
 
 
-#[cfg(feature = "actix-web")]
-extern crate actix_web;
-extern crate gettext;
-#[cfg(feature = "rocket")]
-extern crate rocket;
-
 pub use gettext::*;
 use std::fs;
-
-#[cfg(feature = "rocket")]
-mod with_rocket;
 
 #[cfg(feature = "actix-web")]
 mod with_actix;
 
-#[cfg(feature = "actix-web")]
-pub use with_actix::Internationalized;
+#[cfg(feature = "rocket")]
+mod with_rocket;
 
 const ACCEPT_LANG: &'static str = "Accept-Language";
 
@@ -98,7 +76,7 @@ pub struct I18n {
 
 pub type Translations = Vec<(&'static str, Catalog)>;
 
-/// Loads translations at runtime. Usually used with `rocket::Rocket::manage`.
+/// Loads translations at runtime. Usually used with `actix_web::web::App::data`.
 ///
 /// Note that the `.mo` files should be present with your binary. If you want to embed them,
 /// use `gettext_macros::include_i18n`.
