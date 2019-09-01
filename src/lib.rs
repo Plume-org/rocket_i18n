@@ -1,6 +1,6 @@
 //! # Rocket I18N
 //!
-//! A crate to help you internationalize your Actix or Actix Web applications.
+//! A crate to help you internationalize your Rocket or Actix Web applications.
 //!
 //! It just selects the correct locale for each request, and return the corresponding `gettext::Catalog`.
 //!
