@@ -54,7 +54,6 @@
 //! You can use the `t` macro in your templates, as long as they have a field called `catalog` to
 //! store your catalog.
 
-
 pub use gettext::*;
 use std::fs;
 
