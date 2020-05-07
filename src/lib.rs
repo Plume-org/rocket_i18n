@@ -63,7 +63,7 @@ mod with_actix;
 #[cfg(feature = "rocket")]
 mod with_rocket;
 
-const ACCEPT_LANG: &'static str = "Accept-Language";
+const ACCEPT_LANG: &str = "Accept-Language";
 
 /// A request guard to get the right translation catalog for the current request.
 pub struct I18n {
@@ -83,7 +83,8 @@ pub fn i18n(domain: &str, lang: Vec<&'static str>) -> Translations {
     lang.iter().fold(Vec::new(), |mut trans, l| {
         let mo_file = fs::File::open(format!("translations/{}/LC_MESSAGES/{}.mo", l, domain))
             .expect("Couldn't open catalog");
-        let cat = Catalog::parse(mo_file).expect(format!("Error while loading catalog ({})", l).as_str());
+        let cat = Catalog::parse(mo_file)
+            .unwrap_or_else(|_| panic!("Error while loading catalog ({})", l));
         trans.push((l, cat));
         trans
     })
