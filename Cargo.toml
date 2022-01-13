@@ -14,8 +14,7 @@ edition = "2018"
 gettext = "0.4"
 
 [dependencies.rocket]
-git = "https://github.com/SergioBenitez/Rocket"
-rev = "async"
+version = "0.5.0-rc.1"
 optional = true
 
 [dependencies.actix-web]
