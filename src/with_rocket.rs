@@ -2,18 +2,16 @@ use crate::{I18n, Translations, ACCEPT_LANG};
 
 use rocket::{
     http::Status,
-    request::{self, FromRequest},
-    Outcome, Request, State,
+    request::{Request, FromRequest, Outcome},
 };
 
 #[rocket::async_trait]
-impl<'a, 'r> FromRequest<'a, 'r> for I18n {
+impl<'r> FromRequest<'r> for I18n {
     type Error = ();
 
-    async fn from_request(req: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let langs = req
-            .guard::<State<Translations>>()
-            .await
+            .rocket().state::<Translations>()
             .expect("Couldn't retrieve translations because they are not managed by Rocket.");
 
         let lang = req
