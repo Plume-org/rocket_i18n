@@ -34,7 +34,7 @@ impl<'r> FromRequest<'r> for I18n {
                 catalog: translation.1.clone(),
                 lang: translation.0,
             }),
-            None => Outcome::Failure((Status::InternalServerError, ())),
+            None => Outcome::Error((Status::InternalServerError, ())),
         }
     }
 }
